@@ -50,37 +50,28 @@ The official source code of OpenCifra is hosted only at:
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/KaykCaputo/OpenCifra.git](https://github.com/KaykCaputo/OpenCifra.git)
+   git clone https://github.com/KaykCaputo/OpenCifra.git
    cd OpenCifra
-
-```
+   ```
 
 2. **Create a virtual environment:**
-```bash
-python3 -m venv .venv
-
-```
-
+   ```bash
+   python3 -m venv .venv
+   ```
 
 3. **Activate it:**
-* **Linux/macOS:** `source .venv/bin/activate`
-* **Windows:** `.venv\Scripts\activate`
-
+   - **Linux/macOS:** `source .venv/bin/activate`
+   - **Windows:** `.venv\Scripts\activate`
 
 4. **Install dependencies:**
-```bash
-pip install kivy kivymd requests beautifulsoup4 pyjnius
-
-```
-
+   ```bash
+   pip install kivy kivymd requests beautifulsoup4 pyjnius
+   ```
 
 5. **Run the application:**
-```bash
-python main.py
-
-```
-
-
+   ```bash
+   python main.py
+   ```
 
 ---
 
@@ -94,12 +85,9 @@ This project uses **Buildozer**.
 
 1. Install Buildozer following the official guide.
 2. Build the APK:
-```bash
-buildozer android debug
-
-```
-
-
+   ```bash
+   buildozer android debug
+   ```
 3. Transfer the `.apk` file from the `bin/` folder to your device.
 
 ---
@@ -157,5 +145,3 @@ This project is licensed under the **MIT License**. You are free to use, modify,
 ## Disclaimer
 
 This software is provided "as is", without warranty of any kind. The authors are not responsible for the use of third-party content accessed by users through this application.
-
-```
