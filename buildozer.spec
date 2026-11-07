@@ -5,7 +5,7 @@ android.minapi = 24
 android.ndk_api = 24
 title = Open Cifra
 package.name = open_cifra
-package.domain = org.test
+package.domain = com.kaykcaputo
 source.dir = .
 source.include_exts = py,png,jpg,kv,json,ttf,md
 source.exclude_dirs = tests,scripts,recipes,.venv,.git,__pycache__,build,dist
@@ -24,5 +24,5 @@ android.allow_backup = True
 android.presplash_color = #FFFFFF
 
 [buildozer]
-log_level = 1
+log_level = 2
 warn_on_root = 1
