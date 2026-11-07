@@ -1,0 +1,3 @@
+# Match ensurepip in CPython 3.14.2, used by the pinned python-for-android commit.
+# p4a recreates the same venv for each ABI; upgrading pip here mixes versions.
+pip==25.3

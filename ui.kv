@@ -1,0 +1,359 @@
+#:import dp kivy.metrics.dp
+
+<QuietLabel@MDLabel>:
+    theme_text_color: 'Custom'
+    text_color: app.muted
+    font_style: 'Caption'
+
+<ToolButton@MDFlatButton>:
+    theme_text_color: 'Custom'
+    text_color: app.accent
+
+<SongItem>:
+    size_hint_y: None
+    height: dp(78)
+    padding: dp(16), dp(10)
+    spacing: dp(14)
+    radius: [dp(16)]
+    elevation: 0
+    md_bg_color: app.surface
+    ripple_behavior: True
+    on_release: app.open_song(root.title, root.artist)
+    MDIcon:
+        icon: 'music-note'
+        theme_text_color: 'Custom'
+        text_color: app.accent
+        size_hint_x: None
+        width: dp(32)
+        pos_hint: {'center_y': .5}
+    MDBoxLayout:
+        orientation: 'vertical'
+        MDLabel:
+            text: root.title
+            bold: True
+            shorten: True
+            shorten_from: 'right'
+        QuietLabel:
+            text: root.artist
+            shorten: True
+            shorten_from: 'right'
+    MDIcon:
+        icon: 'chevron-right'
+        theme_text_color: 'Custom'
+        text_color: app.muted
+        size_hint_x: None
+        width: dp(24)
+        pos_hint: {'center_y': .5}
+
+<SearchScreen>:
+    name: 'search'
+    md_bg_color: app.background
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(20), dp(16), dp(20), dp(8)
+        spacing: dp(12)
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            MDIcon:
+                icon: 'guitar-pick'
+                theme_text_color: 'Custom'
+                text_color: app.accent
+                size_hint_x: None
+                width: dp(38)
+            MDLabel:
+                text: 'OpenCifra'
+                font_style: 'H5'
+                bold: True
+            ToolButton:
+                text: 'TUNER'
+                on_release: app.open_tuner()
+        MDCard:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: dp(126)
+            padding: dp(20)
+            radius: [dp(22)]
+            md_bg_color: .22, .13, .36, 1
+            elevation: 0
+            QuietLabel:
+                text: 'YOUR NEXT SESSION'
+                text_color: app.accent
+            MDLabel:
+                text: 'Find a song. Make it yours.'
+                font_style: 'H6'
+                bold: True
+            QuietLabel:
+                text: 'Chords, a tuner, and room to practice.'
+        MDTextField:
+            id: query
+            hint_text: 'Search songs or artists'
+            icon_left: 'magnify'
+            mode: 'round'
+            multiline: False
+            on_text: app.on_search_text(self.text)
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(42)
+            ToolButton:
+                text: 'SEARCH' if app.section != 'Search' else '[ Search ]'
+                on_release: app.select_section('Search')
+            ToolButton:
+                text: 'RECENT' if app.section != 'Recent' else '[ Recent ]'
+                on_release: app.select_section('Recent')
+            ToolButton:
+                text: 'MY LISTS' if app.section != 'Lists' else '[ My lists ]'
+                on_release: app.select_section('Lists')
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(40) if app.section == 'Lists' else 0
+            opacity: 1 if app.section == 'Lists' else 0
+            disabled: app.section != 'Lists'
+            ToolButton:
+                text: app.active_list + '  v'
+                on_release: app.choose_list()
+            ToolButton:
+                text: '+ NEW'
+                on_release: app.new_list()
+            ToolButton:
+                text: 'DELETE'
+                on_release: app.delete_list()
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(30)
+            QuietLabel:
+                text: app.search_status
+            MDSpinner:
+                size_hint: None, None
+                size: dp(22), dp(22)
+                active: app.search_busy
+                opacity: 1 if app.search_busy else 0
+        MDRecycleView:
+            id: results
+            viewclass: 'SongItem'
+            RecycleBoxLayout:
+                default_size: None, dp(78)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(8)
+                padding: 0, 0, 0, dp(16)
+                orientation: 'vertical'
+        ToolButton:
+            text: 'TRY AGAIN'
+            pos_hint: {'center_x': .5}
+            opacity: 1 if app.search_failed else 0
+            disabled: not app.search_failed
+            size_hint_y: None
+            height: dp(36) if app.search_failed else 0
+            on_release: app.on_search_text(root.ids.query.text)
+        QuietLabel:
+            text: 'Made by Kayk Caputo  /  Open source. Play freely.'
+            halign: 'center'
+            size_hint_y: None
+            height: dp(24)
+
+<LyricsScreen>:
+    name: 'lyrics'
+    md_bg_color: app.background
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(12), 0, dp(12), dp(8)
+        spacing: dp(6)
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(58)
+            MDIconButton:
+                icon: 'arrow-left'
+                on_release: app.back_to_search()
+            MDBoxLayout:
+                orientation: 'vertical'
+                padding: 0, dp(8)
+                MDLabel:
+                    text: app.song_title
+                    bold: True
+                    shorten: True
+                    shorten_from: 'right'
+                QuietLabel:
+                    text: app.song_artist
+                    shorten: True
+                    shorten_from: 'right'
+            MDIconButton:
+                icon: 'playlist-plus'
+                disabled: not app.song_ready
+                on_release: app.choose_list(for_song=True)
+            MDIconButton:
+                icon: 'tune'
+                on_release: app.practice_settings()
+        MDCard:
+            size_hint_y: None
+            height: dp(48)
+            radius: [dp(14)]
+            md_bg_color: app.surface
+            elevation: 0
+            ToolButton:
+                text: 'A-'
+                on_release: app.change_font(-1)
+            QuietLabel:
+                text: str(int(app.font_size))
+                halign: 'center'
+                size_hint_x: None
+                width: dp(24)
+            ToolButton:
+                text: 'A+'
+                on_release: app.change_font(1)
+            Widget:
+            ToolButton:
+                text: '-'
+                disabled: not app.song_ready
+                on_release: app.change_key(-1)
+            QuietLabel:
+                text: 'Key ' + ('original' if app.transpose_steps == 0 else '%+d' % app.transpose_steps)
+                halign: 'center'
+                size_hint_x: None
+                width: dp(74)
+            ToolButton:
+                text: '+'
+                disabled: not app.song_ready
+                on_release: app.change_key(1)
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(38)
+            ToolButton:
+                text: 'SHOW TABS' if app.hide_tabs else 'HIDE TABS'
+                on_release: app.toggle_tabs()
+            ToolButton:
+                text: 'CHORDS'
+                on_release: app.toggle_diagrams()
+            ToolButton:
+                text: 'TUNER'
+                on_release: app.open_tuner()
+            Widget:
+        QuietLabel:
+            text: app.tuning + '  /  Capo ' + str(int(app.capo)) + '  /  Tap a chord for its diagram'
+            size_hint_y: None
+            height: dp(22)
+            shorten: True
+        ScrollView:
+            do_scroll_y: False
+            size_hint_y: None
+            height: dp(152) if app.show_diagrams and app.song_ready else 0
+            opacity: 1 if app.show_diagrams and app.song_ready else 0
+            disabled: not (app.show_diagrams and app.song_ready)
+            MDBoxLayout:
+                id: diagrams
+                size_hint_x: None
+                width: self.minimum_width
+                spacing: dp(8)
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(36) if app.song_status else 0
+            QuietLabel:
+                text: app.song_status
+            MDSpinner:
+                size_hint: None, None
+                size: dp(22), dp(22)
+                active: app.song_busy
+                opacity: 1 if app.song_busy else 0
+            ToolButton:
+                text: 'RETRY'
+                opacity: 1 if app.song_failed else 0
+                disabled: not app.song_failed
+                on_release: app.open_song(app.song_title, app.song_artist)
+        ScrollView:
+            id: lyrics_scroll
+            do_scroll_x: True
+            do_scroll_y: True
+            bar_width: dp(3)
+            on_scroll_start: app.stop_scroll()
+            MDBoxLayout:
+                id: lyrics_container
+                orientation: 'vertical'
+                size_hint: None, None
+                width: max(self.minimum_width, lyrics_scroll.width)
+                height: self.minimum_height
+                padding: dp(16), dp(16)
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            md_bg_color: app.surface
+            MDIconButton:
+                icon: 'pause' if app.scrolling else 'play'
+                disabled: not app.song_ready
+                on_release: app.toggle_scroll()
+            QuietLabel:
+                text: 'Auto-scroll'
+                size_hint_x: None
+                width: dp(66)
+            MDSlider:
+                min: 5
+                max: 80
+                value: app.scroll_speed
+                on_value: app.scroll_speed = self.value
+            QuietLabel:
+                text: str(int(app.scroll_speed))
+                size_hint_x: None
+                width: dp(30)
+
+<TunerScreen>:
+    name: 'tuner'
+    md_bg_color: app.background
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: dp(24)
+        spacing: dp(16)
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            MDIconButton:
+                icon: 'arrow-left'
+                on_release: app.close_tuner()
+            MDLabel:
+                text: 'OpenTuna'
+                font_style: 'H5'
+                bold: True
+            ToolButton:
+                text: 'TUNING'
+                on_release: app.choose_tuning()
+        QuietLabel:
+            text: app.tuning + '  /  A4 = 440 Hz'
+            halign: 'center'
+            size_hint_y: None
+            height: dp(24)
+        MDLabel:
+            text: app.tuner_note
+            font_style: 'H1'
+            bold: True
+            halign: 'center'
+            theme_text_color: 'Custom'
+            text_color: app.accent
+        TunerMeter:
+            cents: app.tuner_cents
+            signal: app.tuner_signal
+            size_hint_y: None
+            height: dp(70)
+        MDLabel:
+            text: app.tuner_reading
+            halign: 'center'
+            size_hint_y: None
+            height: dp(44)
+        QuietLabel:
+            text: app.tuner_status
+            halign: 'center'
+            size_hint_y: None
+            height: dp(42)
+        MDBoxLayout:
+            id: strings
+            size_hint_y: None
+            height: dp(48)
+        ToolButton:
+            text: 'AUTO / CHROMATIC'
+            pos_hint: {'center_x': .5}
+            on_release: app.tuner_target = -1
+        MDRaisedButton:
+            text: 'STOP MICROPHONE' if app.mic_requested else 'START MICROPHONE'
+            pos_hint: {'center_x': .5}
+            on_release: app.toggle_microphone()
+        QuietLabel:
+            text: 'Pluck one string. Let it ring.\nAudio stays on your device.'
+            halign: 'center'

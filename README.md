@@ -1,147 +1,106 @@
 # OpenCifra
 
-OpenCifra is a free and open-source Python application built with **Kivy** and **KivyMD** that serves as a songbook and lyrics viewer.
-
-It allows users to search for songs and artists and view lyrics with chord notation in a mobile-friendly interface (desktop and Android).
-
----
-
-## Official Repository
-
-The official source code of OpenCifra is hosted only at:
-
-[https://github.com/KaykCaputo/OpenCifra](https://github.com/KaykCaputo/OpenCifra)
-
-> **Security Warning:** Any other repository distributing binaries or modified versions should clearly reference this repository as the original source. We have identified cases of third-party repositories using OpenCifra to distribute malware. Users must download binaries only from the official releases page of this repository.
-
----
+An open-source guitar songbook and practice companion for desktop and Android. Built with Python, Kivy and KivyMD, with an English interface and the original dark / Deep Purple palette.
 
 ## Screenshots
 
 <p align="center">
-  <img src="screenshot1.jpeg" width="300" alt="Search Screen"/>
-  <img src="screenshot2.jpeg" width="300" alt="Lyrics Screen"/>
+  <img src="screenshot1.jpeg" width="240" alt="Song search in the dark purple OpenCifra interface" />
+  <img src="screenshot2.jpeg" width="240" alt="Chord sheet with diagrams, font controls and automatic scrolling" />
+</p>
+<p align="center">
+  <img src="screenshot3.jpeg" width="240" alt="A named favorites list" />
+  <img src="screenshot4.jpeg" width="240" alt="Integrated OpenTuna guitar tuner with individual string targets" />
 </p>
 
----
+Captured from the running desktop app at a mobile-sized window, using an original practice exercise. The tuner screenshot shows the microphone off. Regenerate them with `make screenshots` (requires Xvfb on Linux).
 
-## Features
+## Practice tools
 
-* Search songs and artists from public online sources
-* Display lyrics with chord notation
-* Responsive interface using **Kivy / KivyMD**
-* Works on desktop and can be packaged for Android
-* Fully free, open-source, and non-commercial
+- Debounced song search, stale-response protection, recent songs and bounded in-memory caches.
+- Named favorite lists, saved locally; create lists and add/remove songs from the playlist button.
+- Adjustable font size, tablature visibility and automatic scrolling with a speed slider. Touching the sheet pauses scrolling.
+- Semitone transposition and capo controls. Changing capo adjusts chord shapes to preserve sounding pitch; changing key changes pitch. Reset restores the original sounding key.
+- Chord diagrams above the sheet, alternate positions on chord tap, and standard / Drop D / half-step down / DADGAD / Open G / Open D tunings.
+- A local chord generator supplements `guitar.json`, including extensions, altered chords, Brazilian `7M` notation and slash bass notes. Calculations run off the UI thread and are cached. Omitted nonessential notes are labeled. Unrecognized symbols or shapes that cannot fit the supported six-string/four-finger search are explained rather than shown as an incorrect diagram.
+- Integrated **OpenTuna**: chromatic tuning, individual string targets, cents meter and FFT-accelerated pitch detection. The microphone starts only when requested and stops when leaving the tuner or suspending the app.
 
----
+Tuning selection changes chord fingerings and tuner targets; it does not retune an instrument or rewrite source tablature. Transposition applies to chord symbols, not tablature fret numbers. Diagrams show frets relative to the capo.
 
-## Requirements
+## Run locally
 
-* Python 3.x
-* Kivy
-* KivyMD
-* Requests
-* BeautifulSoup4
-* Pyjnius
+Python 3.10+ is required. On Linux, microphone capture requires PortAudio (for example, `sudo apt install libportaudio2`).
 
----
+```sh
+make install
+make run
+```
 
-## Installation (Desktop)
+Without Make: create and activate a virtual environment, run `pip install -r requirements.txt`, then `python main.py`. KivyMD is pinned to 1.2.0 because the application uses its stable widget API. Desktop audio uses SoundDevice; Android uses AudioRecord through Pyjnius.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/KaykCaputo/OpenCifra.git
-   cd OpenCifra
-   ```
+## Development
 
-2. **Create a virtual environment:**
-   ```bash
-   python3 -m venv .venv
-   ```
+```sh
+make dev          # runtime, Ruff and PyInstaller
+make check        # lint and offline unit tests
+make test-ui      # real Kivy UI smoke test; requires Xvfb on Linux
+make doctor       # dependency and tool availability
+make help         # all available targets
+```
 
-3. **Activate it:**
-   - **Linux/macOS:** `source .venv/bin/activate`
-   - **Windows:** `.venv\Scripts\activate`
+Tests cover parsing, markup escaping, tablature filtering, transposition, library persistence, network mocks, chord voicings across tunings and pitch accuracy with synthetic signals. UI smoke tests use an original practice exercise, temporary user data and no microphone or network access. Screenshots are written under `/tmp/opencifra-*.png`.
 
-4. **Install dependencies:**
-   ```bash
-   pip install kivy kivymd requests beautifulsoup4 pyjnius
-   ```
+- `main.py`, `ui.kv`: interface, navigation and practice controls.
+- `songbook.py`: remote requests, parsing, session caches and local library.
+- `music.py`, `guitar.json`: chord formulas, tuning and generated/catalog voicings.
+- `opentuna/`: adapted OpenTuna audio engine and pitch detector; original MIT license retained.
+- `tests/`, `scripts/`: checks and packaging/release helpers.
 
-5. **Run the application:**
-   ```bash
-   python main.py
-   ```
+Favorites contain titles and artists, not downloaded lyrics. Preferences and lists are saved atomically in Kivy's platform-specific user data directory (`~/.config/opencifra/library.json` on Linux). Song content is cached only for the running session. Search and song retrieval require internet access and depend on the source remaining available; rate limits, denied requests and network errors are displayed with retry controls.
 
----
+## Build
 
-## Installation (Android)
+```sh
+make dev
+make build-desktop       # native distribution in dist/OpenCifra/
+make android-tools      # Python build tooling
+make android-debug      # APK in bin/
+make android-deploy     # install and run on an attached device
+make android-logcat
+make package            # desktop archive, Android artifacts and SHA256SUMS
+```
 
-Download the latest official APK from the **GitHub Releases** page of this repository only. Installing APKs from other repositories is not recommended and may pose security risks.
+Build desktop packages on each target OS; cross-compiling desktop binaries is not supported. Android builds require the [Buildozer system prerequisites](https://buildozer.readthedocs.io/en/latest/installation.html), Java, SDK and NDK; the first build downloads a substantial toolchain. Review package identity, version, target SDK and signing before distributing to an app store. `buildozer.spec` retains the existing application identity.
 
-### Building from Source (Android)
+For a signed Android release, export `P4A_RELEASE_KEYSTORE`, `P4A_RELEASE_KEYSTORE_PASSWD`, `P4A_RELEASE_KEYALIAS` and `P4A_RELEASE_KEYALIAS_PASSWD`, then run `make android-release` for an APK or `make android-release ANDROID_ARTIFACT=aab` for an AAB. Store signing credentials outside the repository. See [python-for-android signing](https://python-for-android.readthedocs.io/en/latest/quickstart.html#release-mode).
 
-This project uses **Buildozer**.
+### Android build troubleshooting
 
-1. Install Buildozer following the official guide.
-2. Build the APK:
-   ```bash
-   buildozer android debug
-   ```
-3. Transfer the `.apk` file from the `bin/` folder to your device.
+Use `make android-debug` / `make android-release` so the Android wrapper is applied. The project pins python-for-android and supplies a local KivyMD 1.2.0 recipe because that release is distributed as source, not an Android wheel. A second recipe installs the portable Python implementation of `charset_normalizer`, avoiding an Android binary wheel being passed to the host installer.
 
----
+The wrapper fixes pip at 25.3, matching the bundled Python 3.14.2 `ensurepip`. This avoids mixing pip versions when python-for-android recreates its shared build environment for the second ABI. If an older build left a mixed environment (`ImportError: cannot import name capture_logging`), the wrapper backs up only that environment and recreates it; compiled libraries and SDK/NDK caches are retained.
 
-## File Structure
+Use `BUILDOZER_LOG_LEVEL=2 make android-debug` for verbose output; the default shows progress without listing every compiled library. Build output is filtered to redact signing passwords and other secret environment values. Existing logs are not rewritten; do not share unfiltered Buildozer environment dumps. The compatibility constraint lives in `scripts/android-constraints.txt` and should be reviewed when updating the python-for-android commit.
 
-* `main.py` — Main application entry point containing UI logic and API handling.
-* `guitar.json` — Database of guitar chords and finger positions.
-* `buildozer.spec` — Build configuration for Android packaging.
+## GitHub releases
 
----
+Set the version in `buildozer.spec`, commit changes, build the desired artifacts, and run `make package`. Use an empty release asset directory for each version (`ASSETS=dist/release-VERSION`) to avoid including older builds. Authenticate with `gh auth login` and create/push the version tag:
 
-## Legal Notice
+```sh
+git tag -a v0.3 -m 'OpenCifra 0.3'
+git push origin v0.3
+make release-check TAG=v0.3
+make release-draft TAG=v0.3
+# Review the draft, artifacts and generated release notes on GitHub.
+make release-publish TAG=v0.3
+```
 
-OpenCifra does not store, host, or redistribute copyrighted lyrics or musical works. All lyrics and chords displayed are:
+`REPO=owner/repository` and `ASSETS=path` are configurable. Release checks require a clean tree, a version-matching tag at HEAD on the selected remote, and matching artifact checksums. Publication verifies the uploaded asset digests against the local files. Draft creation and publication are separate [GitHub CLI operations](https://cli.github.com/manual/gh_release_create). These targets upload/publish only when explicitly run. `make clean` removes `build/` and `dist/`, keeping the virtual environment, Android SDK cache and personal library.
 
-* Retrieved in real time from public web sources.
-* Displayed temporarily at the user’s request.
-* Owned by their respective authors and copyright holders.
+## Attribution, privacy and licensing
 
-OpenCifra functions as a client-side viewer, similar to a web browser. If you are a copyright holder and believe that content accessed through this application infringes your rights, please open an issue in this repository.
+Created by Kayk Caputo. OpenTuna is integrated from the sibling `open-tuna` project, also by Kayk Caputo; its license is in `opentuna/LICENSE.md`. Audio is processed locally and is never recorded to disk or uploaded. OpenCifra has no analytics or account system. Remote sources receive requests when users search or load songs.
 
----
+Lyrics and musical works belong to their respective authors. OpenCifra retrieves and displays content at the user's request; it does not host or redistribute a lyrics catalog. Source attribution and credits are preserved. Copyright holders can contact the project through an issue.
 
-## Privacy
-
-OpenCifra does not collect personal data, track users, use analytics, or store song content on servers. All processing happens locally on the user's device.
-
----
-
-## Educational Purpose
-
-OpenCifra is intended for music students, practice, and study for educational and non-commercial use. The project aims to democratize access to music learning tools through free and open-source software.
-
----
-
-## Contributions and Forking
-
-Contributions are welcome via issues and pull requests.
-
-**Forking Guidelines:**
-
-* Fork this repository instead of copying it manually to maintain transparency.
-* Clearly reference the original project.
-* Provide attribution: *This project is based on OpenCifra (https://github.com/KaykCaputo/OpenCifra)*.
-
----
-
-## License
-
-This project is licensed under the **MIT License**. You are free to use, modify, and distribute the software as long as the original copyright notice and license text remain included.
-
----
-
-## Disclaimer
-
-This software is provided "as is", without warranty of any kind. The authors are not responsible for the use of third-party content accessed by users through this application.
+The official repository is [KaykCaputo/OpenCifra](https://github.com/KaykCaputo/OpenCifra). Download binaries only from its official releases. Contributions and forks should retain the MIT license and original-project attribution. See [LICENSE](LICENSE). Software is provided as is.
