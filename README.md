@@ -78,6 +78,8 @@ For a signed Android release, export `P4A_RELEASE_KEYSTORE`, `P4A_RELEASE_KEYSTO
 
 Use `make android-debug` / `make android-release` so the Android wrapper is applied. The project pins python-for-android and supplies a local KivyMD 1.2.0 recipe because that release is distributed as source, not an Android wheel. A second recipe installs the portable Python implementation of `charset_normalizer`, avoiding an Android binary wheel being passed to the host installer.
 
+The KivyMD recipe explicitly copies its `.kv` layouts and other resources using relative paths. This fixes an upstream packaging bug triggered by repeated `kivymd/` components in Android build paths, which produced APKs that closed during startup. Cached distributions missing those layouts are backed up and rebuilt automatically, retaining the compiled native libraries. Every successful Android build now checks all 36 layouts in every ABI of the final APK/AAB. Run the same check manually with `make android-verify APK=bin/your-app.apk`.
+
 The wrapper fixes pip at 25.3, matching the bundled Python 3.14.2 `ensurepip`. This avoids mixing pip versions when python-for-android recreates its shared build environment for the second ABI. If an older build left a mixed environment (`ImportError: cannot import name capture_logging`), the wrapper backs up only that environment and recreates it; compiled libraries and SDK/NDK caches are retained.
 
 Use `BUILDOZER_LOG_LEVEL=2 make android-debug` for verbose output; the default shows progress without listing every compiled library. Build output is filtered to redact signing passwords and other secret environment values. Existing logs are not rewritten; do not share unfiltered Buildozer environment dumps. The compatibility constraint lives in `scripts/android-constraints.txt` and should be reviewed when updating the python-for-android commit.
@@ -87,15 +89,15 @@ Use `BUILDOZER_LOG_LEVEL=2 make android-debug` for verbose output; the default s
 Set the version in `buildozer.spec`, commit changes, build the desired artifacts, and run `make package`. Use an empty release asset directory for each version (`ASSETS=dist/release-VERSION`) to avoid including older builds. Authenticate with `gh auth login` and create/push the version tag:
 
 ```sh
-git tag -a v0.3 -m 'OpenCifra 0.3'
-git push origin v0.3
-make release-check TAG=v0.3
-make release-draft TAG=v0.3
+git tag -a v0.3.1 -m 'OpenCifra 0.3.1'
+git push origin v0.3.1
+make release-check TAG=v0.3.1
+make release-draft TAG=v0.3.1
 # Review the draft, artifacts and generated release notes on GitHub.
-make release-publish TAG=v0.3
+make release-publish TAG=v0.3.1
 ```
 
-`REPO=owner/repository` and `ASSETS=path` are configurable. Release checks require a clean tree, a version-matching tag at HEAD on the selected remote, and matching artifact checksums. Publication verifies the uploaded asset digests against the local files. Draft creation and publication are separate [GitHub CLI operations](https://cli.github.com/manual/gh_release_create). These targets upload/publish only when explicitly run. `make clean` removes `build/` and `dist/`, keeping the virtual environment, Android SDK cache and personal library.
+`REPO=owner/repository` and `ASSETS=path` are configurable. Release checks require a clean tree, a version-matching tag at HEAD on the selected remote, and matching artifact checksums. Android assets must match the release version and pass the runtime resource check. Publication verifies the uploaded asset digests against the local files. Draft creation and publication are separate [GitHub CLI operations](https://cli.github.com/manual/gh_release_create). These targets upload/publish only when explicitly run. `make clean` removes `build/` and `dist/`, keeping the virtual environment, Android SDK cache and personal library.
 
 ## Attribution, privacy and licensing
 

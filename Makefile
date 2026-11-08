@@ -11,7 +11,7 @@ REPO ?= KaykCaputo/OpenCifra
 ASSETS ?= dist/release
 ANDROID_ARTIFACT ?= apk
 
-.PHONY: screenshots help venv install dev run test test-ui lint format check doctor build build-desktop package android-tools android-debug android-release android-deploy android-logcat release-check release-draft release-publish clean
+.PHONY: android-verify screenshots help venv install dev run test test-ui lint format check doctor build build-desktop package android-tools android-debug android-release android-deploy android-logcat release-check release-draft release-publish clean
 
 help: ## Show all commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -66,6 +66,10 @@ android-debug: ## Build an Android debug APK (SDK/NDK downloaded on first run)
 android-release: ## Build a signed APK (ANDROID_ARTIFACT=aab for AAB) using P4A_RELEASE_* environment variables
 	$(PY) scripts/release.py signing-check
 	@APP_ANDROID_RELEASE_ARTIFACT=$(ANDROID_ARTIFACT) $(BUILDOZER) android release
+
+android-verify: ## Validate APK/AAB runtime assets (APK=bin/file.apk)
+	@test -n "$(APK)" || { echo 'Usage: make android-verify APK=bin/file.apk'; exit 1; }
+	$(PY) scripts/verify_android.py "$(APK)"
 
 android-deploy: ## Install and start the debug APK on an attached Android device
 	@$(BUILDOZER) android deploy run

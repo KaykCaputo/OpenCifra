@@ -9,6 +9,11 @@ import re
 import shutil
 import subprocess
 
+try:
+    from .verify_android import verify
+except ImportError:
+    from verify_android import verify
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -40,9 +45,15 @@ def package(args):
         name = f'OpenCifra-{args.version}-{platform.system().lower()}-{platform.machine()}'
         shutil.make_archive(str(target / name), 'zip', desktop.parent, desktop.name)
     for artifact in (ROOT / 'bin').glob('*'):
-        if artifact.suffix in ('.apk', '.aab'):
+        if artifact.suffix in ('.apk', '.aab') and f'-{args.version}-' in artifact.name:
+            verify(artifact)
             shutil.copy2(artifact, target / artifact.name)
     artifacts = files(target)
+    for artifact in artifacts:
+        if artifact.suffix in ('.apk', '.aab'):
+            if f'-{args.version}-' not in artifact.name:
+                fail('Older Android artifacts found. Use a fresh ASSETS directory for this version.')
+            verify(artifact)
     if not artifacts:
         fail('No artifacts. Run make build-desktop or make android-debug first.')
     (target / 'SHA256SUMS').write_text(''.join(f'{checksum(p)}  {p.name}\n' for p in artifacts))
@@ -69,6 +80,11 @@ def validate(args):
     expected = ''.join(f'{checksum(p)}  {p.name}\n' for p in artifacts)
     if (target / 'SHA256SUMS').read_text() != expected:
         fail('Artifact checksums changed. Run make package again.')
+    for artifact in artifacts:
+        if artifact.suffix in ('.apk', '.aab'):
+            if f'-{version}-' not in artifact.name:
+                fail('Android artifact version does not match the release tag.')
+            verify(artifact)
     return artifacts + [target / 'SHA256SUMS']
 
 

@@ -222,8 +222,15 @@
             ToolButton:
                 text: 'SHOW TABS' if app.hide_tabs else 'HIDE TABS'
                 on_release: app.toggle_tabs()
-            ToolButton:
+            MDRectangleFlatIconButton:
+                id: diagrams_toggle
                 text: 'CHORDS'
+                icon: 'chevron-up' if app.show_diagrams else 'chevron-down'
+                theme_text_color: 'Custom'
+                text_color: app.accent
+                theme_icon_color: 'Custom'
+                icon_color: app.accent
+                line_color: 0, 0, 0, 0
                 on_release: app.toggle_diagrams()
             ToolButton:
                 text: 'TUNER'
@@ -235,6 +242,7 @@
             height: dp(22)
             shorten: True
         ScrollView:
+            id: diagrams_scroll
             do_scroll_y: False
             size_hint_y: None
             height: dp(152) if app.show_diagrams and app.song_ready else 0
